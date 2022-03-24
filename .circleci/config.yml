@@ -6,7 +6,12 @@ orbs:
 references:
   cache_key: &cache_key
     key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
-
+  ruby_dependencies: &ruby_dependencies
+    run:
+      name: Download Ruby Dependencies
+      command: |
+        gem install bundler
+        bundle check || bundle update || bundle install --path vendor/bundl
 config_android: &config_android
   working_directory: ~/code
   docker:
@@ -39,6 +44,7 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
   <<: *config_android
   steps:
     - checkout
+    - *ruby_dependencies
     - run:
         name: Build debug
         command: ./gradlew :app:assembleDebug
