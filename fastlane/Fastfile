@@ -51,7 +51,6 @@ platform :android do
             APK_BUILD = APK_JSON["elements"][0]["versionCode"]
 
             firebase_app_distribution(
-                service_credentials_file: "fastlane/firebase-credential.json",
                 app: "1:16230638443:android:fe1c07f5514bc6e9d3222e",
                 testers: "tuvyliem@gmail.com",
                 release_notes: "Lots of amazing new features to test out!",
