@@ -56,7 +56,7 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
 
     - run:
         name: Upload File APK Debug to Firebase App Distribution
-        command: bundle exec fastlane distribution
+        command: bundle exec fastlane distribute
 
 jobs:
 
