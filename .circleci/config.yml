@@ -1,114 +1,72 @@
 version: 2.1
 
 orbs:
-  android: circleci/android@1.0.3
+  android: circleci/android@0.2.1
 
 references:
+  cache_key: &cache_key
+    key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
 
-  workspace: &workspace
-               ~/code
+config_android: &config_android
+  working_directory: ~/code
+  docker:
+    - image: circleci/android:api-30
 
-  android_config: &android_config
-    working_directory: *workspace
-    docker:
-      - image: circleci/android:api-29
-    environment:
-      TERM: dumb
-      _JAVA_OPTIONS: -Xmx1536m
-      GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx2048m -Dkotlin.compiler.execution.strategy=in-process
-    resource_class: large
+  environment:
+    JVM_OPTS: -Xmx3200m
 
-  gradle_key: &gradle_key
-                jars-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}
+build_test: &build_test
+  <<: *config_android
+  steps:
+    - checkout
+    - restore_cache:
+        <<: *cache_key
+    - run:
+        name: Download Dependencies
+        command: ./gradlew androidDependencies
 
-  gems_key: &gems_key
-              gems-{{ checksum "Gemfile.lock" }}
+    - save_cache:
+        <<: *cache_key
+        paths:
+          - ~/.gradle/caches
+          - ~/.gradle/wrapper
 
-  restore_gradle_cache: &restore_gradle_cache
-    restore_cache:
-      key: *gradle_key
+    - run:
+        name: Build app
+        command: ./gradlew build
 
-  restore_gems_cache: &restore_gems_cache
-    restore_cache:
-      key: *gems_key
+deploy_debug_to_firebase: &deploy_debug_to_firebase
+  <<: *config_android
+  steps:
+    - checkout
+    - run:
+        name: Build debug
+        command: ./gradlew :app:assembleDebug
 
-  save_gradle_cache: &save_gradle_cache
-    save_cache:
-      paths:
-        - ~/.gradle
-        - ~/.m2
-      key: *gradle_key
+    - run:
+        name: Install Firebase CLI
+        command: |
+          curl -sL https://firebase.tools | bash
 
-  save_gems_cache: &save_gems_cache
-    save_cache:
-      paths:
-        - vendor/bundle
-      key: *gems_key
-
-  ruby_dependencies: &ruby_dependencies
-    run:
-      name: Download Ruby Dependencies
-      command: |
-        gem install bundler
-        bundle check || bundle update || bundle install --path vendor/bundl
+    - run:
+        name: Upload File APK Debug to Firebase App Distribution
+        command: firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN_CLI --release-notes "Upload APK to Firebase"
 
 jobs:
+  build_test:
+    <<: *build_test
 
-  test_distribution:
-    <<: *android_config
-    steps:
-
-      - checkout
-      - android/install-ndk:
-          ndk-version: android-ndk-r21
-          ndk-sha: afc9c0b9faad222898ac8168c78ad4ccac8a1b5c
-      - *restore_gradle_cache
-      - *restore_gems_cache
-      - *ruby_dependencies
-      - *save_gradle_cache
-      - *save_gems_cache
-      - run:
-          name: Init permission
-          command: sudo chmod +x gradlew
-      - run:
-          name: Upload APK to Drive & notify to slack test_bot channel
-          no_output_timeout: 30m
-          command: bundle exec fastlane testDistribution
-
-  distribution:
-    <<: *android_config
-    steps:
-      - checkout
-      - android/install-ndk:
-          ndk-version: android-ndk-r21
-          ndk-sha: afc9c0b9faad222898ac8168c78ad4ccac8a1b5c
-      - *restore_gradle_cache
-      - *restore_gems_cache
-      - *ruby_dependencies
-      - *save_gradle_cache
-      - *save_gems_cache
-      - run:
-          name: Init permission
-          command: sudo chmod +x gradlew
-      - run:
-          name: Upload APK to Drive, Firebase Distribution & notify to slack KLive channel
-          no_output_timeout: 30m
-          command: bundle exec fastlane distribution
-
+  deploy_debug_to_firebase:
+    <<: *deploy_debug_to_firebase
 
 workflows:
-  version: 2
-  workflow:
-
+  version: 1
+  build_test_and_deploy:
     jobs:
-      - test_distribution:
+      - build_test
+      - deploy_debug_to_firebase:
+          requires:
+            - build_test
           filters:
             branches:
-              only:
-                - feat-ci
-      - distribution:
-          filters:
-            branches:
-              only:
-                - /release-.*/
-                - /hotfix\/release-.*/
+              only: circleci-project-setup
