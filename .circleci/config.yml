@@ -53,8 +53,6 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
         command: firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN_CLI --release-notes "Upload APK to Firebase"
 
 jobs:
-  build_test:
-    <<: *build_test
 
   deploy_debug_to_firebase:
     <<: *deploy_debug_to_firebase
@@ -63,10 +61,7 @@ workflows:
   version: 1
   build_test_and_deploy:
     jobs:
-      - build_test
       - deploy_debug_to_firebase:
-          requires:
-            - build_test
           filters:
             branches:
               only: circleci-project-setup
