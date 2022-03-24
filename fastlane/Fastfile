@@ -1,0 +1,81 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+  desc "Runs all the tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Submit a new Beta Build to Crashlytics Beta"
+  lane :beta do
+    gradle(task: "clean assembleRelease")
+    crashlytics
+  
+    # sh "your_script.sh"
+    # You can also use other beta testing services here
+  end
+
+  desc "Deploy a new version to the Google Play"
+  lane :deploy do
+    gradle(task: "clean assembleRelease")
+    upload_to_play_store
+  end
+
+  desc "My awesome app"
+        lane :distribute do
+
+            commit = last_git_commit
+
+
+            gradle(task: "clean --no-daemon assembleRelease")
+            APK_LOCATION = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+            APK_JSON_LOCATION = lane_context[SharedValues::GRADLE_OUTPUT_JSON_OUTPUT_PATH]
+
+            APK_JSON = load_json(json_path: APK_JSON_LOCATION)
+            APK_VERSION = APK_JSON["elements"][0]["versionName"]
+            APK_BUILD = APK_JSON["elements"][0]["versionCode"]
+
+            firebase_app_distribution(
+                app: "1:16230638443:android:fe1c07f5514bc6e9d3222e",
+                testers: "tuvyliem@gmail.com",
+                release_notes: "Lots of amazing new features to test out!",
+                firebase_cli_path: "/absolute/path/to/firebase/cli/binary"
+            )
+
+                    slack(
+                            slack_url: "https://hooks.slack.com/services/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",
+                            channel: "#test-slive-distribute",
+                            link_names: true,
+                            message: ":star: *SLive! Production is available",
+                            default_payloads: [],
+                            attachment_properties: {
+                                fields: [
+                                    {
+                                        title: "Version",
+                                        value: "#{APK_VERSION} (#{APK_BUILD})"
+                                    },
+                                    {
+                                        title: "Firebase Distribution",
+                                        value: "Uploaded Production & Skip Maintenance - #{APK_VERSION} (#{APK_BUILD})"
+                                    },
+                                ]
+                            })
+
+
+        end
+end
