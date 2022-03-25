@@ -88,8 +88,11 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
 
     - run:
         name: Upload File APK Debug to Firebase App Distribution
-        command: bundle exec fastlane distribute
+        command: firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN_CLI --release-notes "Upload APK to Firebase"
 
+    - slack/notify:
+        event: pass
+        template: success_tagged_deploy_1
 jobs:
 
   deploy_debug_to_firebase:
