@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   android: circleci/android@0.2.1
-
+  slack: circleci/slack@4.1
 references:
   cache_key: &cache_key
     key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
