@@ -71,11 +71,6 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
   steps:
     - checkout
     - *ruby_dependencies
-    - *restore_gradle_cache
-    - *restore_gems_cache
-    - *ruby_dependencies
-    - *save_gradle_cache
-    - *save_gems_cache
     - run:
         name: Build debug
         command: ./gradlew :app:assembleDebug
@@ -84,7 +79,9 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
         name: Install Firebase CLI
         command: |
           curl -sL https://firebase.tools | bash
-
+    - run:
+        name: Init permission
+        command: sudo chmod +x gradlew
     - run:
         name: Upload File APK Debug to Firebase App Distribution
         command: bundle exec fastlane distribute
