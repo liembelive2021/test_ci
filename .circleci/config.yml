@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   android: circleci/android@0.2.1
-  slack: circleci/slack@4.1
+  slack: circleci/slack@4.8.3
 references:
   cache_key: &cache_key
     key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
@@ -73,6 +73,23 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
     - *ruby_dependencies
     - *restore_gems_cache
     - *save_gems_cache
+    - slack/notify:
+        custom: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "plain_text",
+                    "text": "*This is a text notification*",
+                    "emoji": true
+                  }
+                ]
+              }
+            ]
+          }
+        event: always
     - run:
         name: Build debug
         command: ./gradlew :app:assembleDebug
@@ -84,9 +101,10 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
     - run:
         name: Init permission
         command: sudo chmod +x gradlew
+
     - run:
         name: Upload File APK Debug to Firebase App Distribution
-        command: bundle exec fastlane distribute
+        command: firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN_CLI --release-notes "Upload APK to Firebase"
 
 jobs:
 
