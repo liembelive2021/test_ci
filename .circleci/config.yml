@@ -71,6 +71,8 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
   steps:
     - checkout
     - *ruby_dependencies
+    - *restore_gems_cache
+    - *save_gems_cache
     - run:
         name: Build debug
         command: ./gradlew :app:assembleDebug
