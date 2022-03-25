@@ -53,10 +53,26 @@ deploy_debug_to_firebase: &deploy_debug_to_firebase
         name: Install Firebase CLI
         command: |
           curl -sL https://firebase.tools | bash
-
+    - slack/notify:
+        custom: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "plain_text",
+                    "text": "*This is a text notification*",
+                    "emoji": true
+                  }
+                ]
+              }
+            ]
+          }
+        event: always
     - run:
         name: Upload File APK Debug to Firebase App Distribution
-        command: bundle exec fastlane distribute
+        command: firebase appdistribution:distribute app/build/outputs/apk/debug/app-debug.apk --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN_CLI --release-notes "Upload APK to Firebase"
 
 jobs:
 
