@@ -58,8 +58,7 @@ platform :android do
             )
 
                     slack(
-                            slack_url: "https://hooks.slack.com/services/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",
-                            channel: "#test-slive-distribute",
+                            slack_url: "https://hooks.slack.com/services/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",
                             link_names: true,
                             message: ":star: *SLive! Production is available",
                             default_payloads: [],
