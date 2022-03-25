@@ -84,6 +84,7 @@ workflows:
   build_test_and_deploy:
     jobs:
       - deploy_debug_to_firebase:
+          context: slack-secrets
           filters:
             branches:
               only: circleci-project-setup
