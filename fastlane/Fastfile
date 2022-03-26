@@ -57,24 +57,7 @@ platform :android do
                 firebase_cli_path: "/absolute/path/to/firebase/cli/binary"
             )
 
-                    slack(
-                            slack_url: "https://hooks.slack.com/services/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",
-                            channel: "#test-slive-distribute",
-                            link_names: true,
-                            message: ":star: *SLive! Production is available",
-                            default_payloads: [],
-                            attachment_properties: {
-                                fields: [
-                                    {
-                                        title: "Version",
-                                        value: "#{APK_VERSION} (#{APK_BUILD})"
-                                    },
-                                    {
-                                        title: "Firebase Distribution",
-                                        value: "Uploaded Production & Skip Maintenance - #{APK_VERSION} (#{APK_BUILD})"
-                                    },
-                                ]
-                            })
+
 
 
         end

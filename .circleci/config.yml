@@ -192,4 +192,6 @@ workflows:
       - deploy_debug_to_firebase:
           filters:
             branches:
-              only: circleci-project-setup
+              only:
+               - circleci-project-setup
+               - main
